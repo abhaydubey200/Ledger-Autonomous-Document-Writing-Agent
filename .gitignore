@@ -1,0 +1,39 @@
+# Generated documents
+outputs/*.docx
+outputs/
+
+# SQLite databases (auto-created on first run)
+ledger.db
+agent_history.db
+
+# Logs
+server.log
+*.log
+
+# Uploaded documents
+uploads/*.txt
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+env/
+venv/
+.env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

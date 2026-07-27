@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  ledger:
+    build: .
+    container_name: ledger-agent
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the outputs directory so generated .docx files persist
+      - ./outputs:/app/outputs
+      # Mount the SQLite database so history persists across restarts
+      - ./agent_history.db:/app/agent_history.db
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+    restart: unless-stopped

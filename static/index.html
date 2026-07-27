@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ledger — Autonomous Document Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>§</text></svg>" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark">
+    <span class="wordmark-mark">§</span>
+    <span class="wordmark-text">Ledger</span>
+  </div>
+  <div class="topbar-sub">Autonomous Document Agent</div>
+  <div class="status-pill" id="statusPill">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">checking&nbsp;connection…</span>
+  </div>
+</header>
+
+<main class="workbench">
+
+  <!-- LEFT: composer + history -->
+  <section class="pane pane-composer">
+    <div class="pane-inner">
+      <h1 class="composer-title">What do you need drafted?</h1>
+      <p class="composer-sub">Describe the document in plain language. The agent decides the type, the structure, and — where you leave things unsaid — makes the call itself and tells you what it assumed.</p>
+
+      <textarea id="requestInput" class="composer-textarea" rows="6"
+        placeholder="e.g. Create a project plan for launching a mobile banking app, including timeline, milestones, and team roles."></textarea>
+
+      <div class="chip-row">
+        <button class="chip" data-example="Create a project plan for launching a new mobile banking app for a fintech startup, including timeline, milestones, and team roles.">Project plan</button>
+        <button class="chip" data-example="We need something for the client meeting tomorrow about our Q3 performance. Budget is tight, not totally sure if it should be a report or a proposal for more funding, just put together whatever covers it best.">Ambiguous request</button>
+        <button class="chip" data-example="Draft an SOP for handling customer refund requests at a mid-size e-commerce company.">SOP</button>
+      </div>
+
+      <label class="email-toggle">
+        <input type="checkbox" id="emailToggle" />
+        <span>Also email the finished document</span>
+      </label>
+      <input type="email" id="emailRecipient" class="composer-textarea email-recipient-input hidden"
+        placeholder="recipient@example.com" />
+
+      <button id="generateBtn" class="btn-generate">
+        <span class="btn-spinner hidden" id="btnSpinner"></span>
+        <span id="generateBtnText">Generate document</span>
+      </button>
+      <div id="generationProgress" class="hidden">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p class="composer-note" id="modeNote"></p>
+
+      <div class="history-block">
+        <div class="history-head">
+          <span>History</span>
+          <span class="history-count" id="historyCount"></span>
+        </div>
+        <div id="historyList" class="history-list">
+          <p class="history-empty">Nothing generated yet — your first document will appear here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: live execution + document preview -->
+  <section class="pane pane-output">
+    <div class="pane-inner">
+
+      <div id="emptyState" class="empty-state">
+        <div class="empty-mark">§</div>
+        <p>Submit a request on the left. The agent's plan will run here step by step, then the finished document appears below it, ready to download.</p>
+      </div>
+
+      <div id="runState" class="run-state hidden">
+        <div class="run-header">
+          <h2 id="docTypeLabel">—</h2>
+          <span class="confidence-badge" id="confidenceBadge">—</span>
+          <span class="mode-badge" id="modeBadge">—</span>
+        </div>
+        <p class="reasoning-line" id="reasoningLine"></p>
+
+        <div id="summaryCard" class="summary-card hidden">
+          <div class="summary-label">Agent Decision Summary</div>
+          <div class="summary-grid">
+            <div class="summary-item"><span class="summary-value" id="sumIntent">—</span><span class="summary-key">Intent</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumType">—</span><span class="summary-key">Detected Type</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumClassConf">—</span><span class="summary-key">Classification Confidence</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumReflConf">—</span><span class="summary-key">Reflection Confidence</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumAssumptions">—</span><span class="summary-key">Assumptions</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumIssues">—</span><span class="summary-key">Reflection Issues</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumSections">—</span><span class="summary-key">Sections Generated</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumRegenerated">—</span><span class="summary-key">Sections Fixed</span></div>
+            <div class="summary-item"><span class="summary-value" id="sumTime">—</span><span class="summary-key">Execution Time</span></div>
+          </div>
+          <div id="emailRow" class="summary-email-row hidden">
+            <span class="email-badge" id="emailBadge">—</span>
+            <span id="emailDetail"></span>
+          </div>
+        </div>
+
+        <ol class="checklist" id="checklist"></ol>
+
+        <div id="assumptionsBlock" class="assumptions-block hidden">
+          <div class="assumptions-label">Assumptions the agent made</div>
+          <ul id="assumptionsList"></ul>
+        </div>
+
+        <div id="reflectionBlock" class="reflection-block hidden">
+          <div class="reflection-label">Reflection — evaluate → repair against expected elements</div>
+          <ul id="reflectionList" class="reflection-list"></ul>
+        </div>
+
+        <div id="timingBlock" class="timing-block hidden">
+          <div class="timing-item"><span class="timing-value" id="timingPlanning">—</span><span class="timing-label">Planning</span></div>
+          <div class="timing-item"><span class="timing-value" id="timingDrafting">—</span><span class="timing-label">Drafting</span></div>
+          <div class="timing-item"><span class="timing-value" id="timingReflection">—</span><span class="timing-label">Reflection</span></div>
+          <div class="timing-item"><span class="timing-value" id="timingDocx">—</span><span class="timing-label">DOCX</span></div>
+          <div class="timing-item timing-total"><span class="timing-value" id="timingTotal">—</span><span class="timing-label">Total</span></div>
+        </div>
+
+        <div id="documentCard" class="document-card hidden">
+          <div class="document-card-head">
+            <div class="document-title" id="documentTitle">—</div>
+            <a id="downloadBtn" class="stamp-btn" href="#" download>
+              <span class="stamp-ring"></span>
+              <span class="stamp-label">Download<br />.docx</span>
+            </a>
+          </div>
+          <div id="sectionsPreview" class="sections-preview"></div>
+        </div>
+
+        <details id="logDetails" class="log-details hidden">
+          <summary>Full execution log (<span id="logCount">0</span> events)</summary>
+          <div id="logTimeline" class="log-timeline"></div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
